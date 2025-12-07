@@ -1,7 +1,18 @@
 from flask import Flask, render_template, request, redirect
 from db import get_connection
+import os
+import subprocess
 
 app = Flask(__name__)
+
+# Initialize database on first run
+def init_db():
+    if not os.path.exists('ground_shipping.db'):
+        print("Database not found. Creating database...")
+        subprocess.run(['python', 'create_db.py'])
+        print("Database created successfully!")
+
+init_db()
 
 
  
