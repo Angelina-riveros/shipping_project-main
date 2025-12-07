@@ -81,11 +81,12 @@ def reschedule():
 
 
  
-# ADD NEW SHIPMENT
+# ADD NEW PACKAGE
  
 @app.route("/add_shipment", methods=["GET", "POST"])
 def add_shipment():
     message = None
+    package_id = None
 
     if request.method == "POST":
         #Package data
@@ -95,13 +96,7 @@ def add_shipment():
         width = request.form["width"]
         height = request.form["height"]
         declared_value = request.form["value"]
-        special_cargo = request.form["special"]
-        #Shipment data
-        employee_id = request.form["employee_id"]
-        vehicle_id = request.form["vehicle_id"]
-        delivery_location = request.form["location"]
-        distance = request.form["distance"]
-        expected_date = request.form["date"]
+        special_cargo = request.form.get("special", "No")
         
         conn = get_connection()
         cursor = conn.cursor()
@@ -114,6 +109,32 @@ def add_shipment():
         
         package_id = cursor.lastrowid
         
+        conn.commit()
+        
+        message = f"Package #{package_id} created successfully! Now assign it to a shipment."
+        
+        cursor.close()
+        conn.close()
+
+    return render_template("add_shipment.html", message=message, package_id=package_id)
+
+
+# ASSIGN SHIPMENT
+@app.route("/assign_shipment", methods=["GET", "POST"])
+def assign_shipment():
+    message = None
+
+    if request.method == "POST":
+        package_id = request.form["package_id"]
+        employee_id = request.form["employee_id"]
+        vehicle_id = request.form["vehicle_id"]
+        delivery_location = request.form["location"]
+        distance = request.form["distance"]
+        expected_date = request.form["date"]
+        
+        conn = get_connection()
+        cursor = conn.cursor()
+        
         # Insert shipment
         cursor.execute("""
             INSERT INTO Shipment (package_id, employee_id, vehicle_id, delivery_location, distance_miles, status, expected_delivery_date)
@@ -122,12 +143,12 @@ def add_shipment():
         
         conn.commit()
         
-        message = "Shipment created successfully!"
+        message = "Shipment assigned successfully!"
         
         cursor.close()
         conn.close()
 
-    return render_template("add_shipment.html", message=message)
+    return render_template("assign_shipment.html", message=message)
 
 
  
