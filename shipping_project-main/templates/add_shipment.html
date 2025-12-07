@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Shipment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System</h2>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/tracking">Track</a>
+            <a href="/add_shipment">Add Shipment</a>
+            <a href="/shipments">Shipments</a>
+            <a href="/customers">Customers</a>
+            <a href="/employees">Employees</a>
+            <a href="/vehicles">Vehicles</a>
+        </nav>
+    </header>
+    <h1>Add a New Shipment</h1>
+
+    <form method="POST">
+        <h3>Package Information</h3>
+
+        <label>Customer ID:</label>
+        <input type="number" name="customer_id" required><br>
+
+        <label>Weight (lbs):</label>
+        <input type="number" step="0.01" name="weight" required><br>
+
+        <label>Length (in):</label>
+        <input type="number" step="0.01" name="length" required><br>
+
+        <label>Width (in):</label>
+        <input type="number" step="0.01" name="width" required><br>
+
+        <label>Height (in):</label>
+        <input type="number" step="0.01" name="height" required><br>
+
+        <label>Declared Value ($):</label>
+        <input type="number" step="0.01" name="value" required><br>
+
+        <label>Special Cargo:</label>
+        <input type="text" name="special"><br><br>
+
+        <h3>Shipment Information</h3>
+
+        <label>Employee ID:</label>
+        <input type="number" name="employee_id" required><br>
+
+        <label>Vehicle ID:</label>
+        <input type="number" name="vehicle_id" required><br>
+
+        <label>Delivery Location:</label>
+        <input type="text" name="location" required><br>
+
+        <label>Distance (miles):</label>
+        <input type="number" step="0.01" name="distance" required><br>
+
+        <label>Expected Delivery Date:</label>
+        <input type="date" name="date" required><br><br>
+
+        <button type="submit">Create Shipment</button>
+    </form>
+
+    {% if message %}
+        <p><strong>{{ message }}</strong></p>
+    {% endif %}
+</body>
+</html>

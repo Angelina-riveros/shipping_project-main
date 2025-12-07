@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shipments</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System</h2>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/tracking">Track</a>
+            <a href="/add_shipment">Add Shipment</a>
+            <a href="/shipments">Shipments</a>
+            <a href="/customers">Customers</a>
+            <a href="/employees">Employees</a>
+            <a href="/vehicles">Vehicles</a>
+        </nav>
+    </header>
+    <h1>All Shipments</h1>
+
+    <table border="1">
+        <tr>
+            <th>Shipment ID</th>
+            <th>Package ID</th>
+            <th>Employee ID</th>
+            <th>Vehicle ID</th>
+            <th>Location</th>
+            <th>Distance</th>
+            <th>Status</th>
+            <th>Expected Delivery</th>
+        </tr>
+
+        {% for row in rows %}
+        <tr>
+            {% for col in row %}
+            <td>{{ col }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

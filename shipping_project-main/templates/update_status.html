@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Shipment Status</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System</h2>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/tracking">Track</a>
+            <a href="/add_shipment">Add Shipment</a>
+            <a href="/shipments">Shipments</a>
+            <a href="/customers">Customers</a>
+            <a href="/employees">Employees</a>
+            <a href="/vehicles">Vehicles</a>
+        </nav>
+    </header>
+    <h1>Update Shipment Status</h1>
+
+    <form method="POST">
+        <label>Shipment ID:</label>
+        <input type="text" name="shipment_id" required><br><br>
+
+        <label>New Status:</label>
+        <select name="status" required>
+            <option>Pending</option>
+            <option>In Transit</option>
+            <option>Out for Delivery</option>
+            <option>Delivered</option>
+            <option>Delayed</option>
+        </select><br><br>
+
+        <button type="submit">Update</button>
+    </form>
+
+    {% if message %}
+        <p><strong>{{ message }}</strong></p>
+    {% endif %}
+</body>
+</html>

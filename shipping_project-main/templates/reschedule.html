@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reschedule Delivery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System</h2>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/tracking">Track</a>
+            <a href="/add_shipment">Add Shipment</a>
+            <a href="/shipments">Shipments</a>
+            <a href="/customers">Customers</a>
+            <a href="/employees">Employees</a>
+            <a href="/vehicles">Vehicles</a>
+        </nav>
+    </header>
+    <h1>Reschedule Delivery</h1>
+
+    <form method="POST">
+        <label>Tracking Number:</label>
+        <input type="text" name="tracking" required><br><br>
+
+        <label>New Delivery Date:</label>
+        <input type="date" name="date" required><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    {% if message %}
+        <p><strong>{{ message }}</strong></p>
+    {% endif %}
+</body>
+</html>

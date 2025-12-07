@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Payments</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav>
+<a href="/">Home</a>
+<a href="/payments">Payments</a>
+</nav>
+
+<div class="container">
+<h2>Payment Overview</h2>
+
+<table border="1" cellpadding="8">
+<tr>
+<th>Payment ID</th>
+<th>Customer</th>
+<th>Amount</th>
+<th>Status</th>
+</tr>
+
+{% for pay in payments %}
+<tr>
+<td>{{ pay.payment_id }}</td>
+<td>{{ pay.customer }}</td>
+<td>${{ pay.amount }}</td>
+<td>{{ pay.status }}</td>
+</tr>
+{% endfor %}
+</table>
+
+</div>
+
+</body>
+</html>

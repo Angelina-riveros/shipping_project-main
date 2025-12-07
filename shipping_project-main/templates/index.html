@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delivery System - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System</h2>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/tracking">Track</a>
+            <a href="/add_shipment">Add Shipment</a>
+            <a href="/shipments">Shipments</a>
+            <a href="/customers">Customers</a>
+            <a href="/employees">Employees</a>
+            <a href="/vehicles">Vehicles</a>
+        </nav>
+    </header>
+    <h1>Welcome to the Delivery Tracking System</h1>
+
+    <ul>
+        <li><a href="/tracking">Track a Shipment</a></li>
+        <li><a href="/reschedule">Reschedule Delivery</a></li>
+        <li><a href="/add_shipment">Add New Shipment</a></li>
+        <li><a href="/update_status">Update Shipment Status</a></li>
+        <li><a href="/shipments">View Shipments</a></li>
+        <li><a href="/customers">View Customers</a></li>
+        <li><a href="/employees">View Employees</a></li>
+        <li><a href="/vehicles">View Vehicles</a></li>
+        <li><a href="/inquiries">View Inquiries</a></li>
+    </ul>
+</body>
+</html>

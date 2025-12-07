@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/tracking">Track</a>
+        </nav>
+
+        <div class="container">
+            <h2>Price Calculator</h2>
+            <form method="POST">
+            <label>Weight (lbs):</label>
+            <input type="number" name="weight" required><br><br>
+            <label>Speed:</label>
+            <select name="speed">
+            <option value="ground">Ground</option>
+            <option value="two_day">Two Day</option>
+            <option value="overnight">Overnight</option>
+            </select><br><br>
+            <button type="submit">Calculate</button>
+            </form>
+            {% if total %}
+            <h3>Estimated Price: ${{ total }}</h3>
+            {% endif %}
+        </div>
+    </body>
+</html>

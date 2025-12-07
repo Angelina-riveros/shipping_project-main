@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Packages</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav>
+<a href="/">Home</a>
+<a href="/packages">Packages</a>
+</nav>
+
+<div class="container">
+<h2>Package List</h2>
+
+<table border="1" cellpadding="8">
+<tr>
+<th>Package ID</th>
+<th>Weight (lbs)</th>
+<th>Type</th>
+</tr>
+
+{% for p in packages %}
+<tr>
+<td>{{ p.package_id }}</td>
+<td>{{ p.weight }}</td>
+<td>{{ p.type }}</td>
+</tr>
+{% endfor %}
+</table>
+
+</div>
+
+</body>
+</html>

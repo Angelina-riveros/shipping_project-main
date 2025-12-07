@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Track Shipment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System</h2>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/tracking">Track</a>
+            <a href="/add_shipment">Add Shipment</a>
+            <a href="/shipments">Shipments</a>
+            <a href="/customers">Customers</a>
+            <a href="/employees">Employees</a>
+            <a href="/vehicles">Vehicles</a>
+        </nav>
+    </header>
+    <h1>Track a Shipment</h1>
+
+    <form method="POST">
+        <label>Enter Tracking Number:</label>
+        <input type="text" name="tracking" required>
+        <button type="submit">Search</button>
+    </form>
+
+    {% if result %}
+        <h2>Shipment Details</h2>
+        <p><strong>Shipment ID:</strong> {{ result[0] }}</p>
+        <p><strong>Package ID:</strong> {{ result[1] }}</p>
+        <p><strong>Employee ID:</strong> {{ result[2] }}</p>
+        <p><strong>Vehicle ID:</strong> {{ result[3] }}</p>
+        <p><strong>Delivery Location:</strong> {{ result[4] }}</p>
+        <p><strong>Distance (miles):</strong> {{ result[5] }}</p>
+        <p><strong>Status:</strong> {{ result[6] }}</p>
+        <p><strong>Expected Delivery:</strong> {{ result[7] }}</p>
+        <p><strong>Customer Name:</strong> {{ result[8] }}</p>
+        <p><strong>Customer Email:</strong> {{ result[9] }}</p>
+    {% endif %}
+</body>
+</html>
