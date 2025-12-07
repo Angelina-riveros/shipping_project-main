@@ -2,8 +2,9 @@ services:
   - type: web
     name: kams-ground-shipping
     runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    plan: free
+    buildCommand: cd shipping_project-main && pip install -r requirements.txt
+    startCommand: cd shipping_project-main && gunicorn app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
