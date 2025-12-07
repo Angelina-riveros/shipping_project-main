@@ -37,10 +37,14 @@ def tracking():
         cursor = conn.cursor()
 
         cursor.execute("""
-                       SELECT Shipment.*, Customer.name, Customer.email
+                       SELECT Shipment.*, Customer.name, Customer.email, 
+                              Employee.name as driver_name, Employee.phone as driver_phone,
+                              Vehicle.plate_number, Vehicle.vehicle_type
                        FROM Shipment
                        JOIN Package ON Shipment.package_id = Package.package_id
                        JOIN Customer ON Package.customer_id = Customer.customer_id
+                       JOIN Employee ON Shipment.employee_id = Employee.employee_id
+                       JOIN Vehicle ON Shipment.vehicle_id = Vehicle.vehicle_id
                        WHERE Shipment.shipment_id = ?
                        """, (tracking_number,))
         
@@ -123,6 +127,7 @@ def add_shipment():
 @app.route("/assign_shipment", methods=["GET", "POST"])
 def assign_shipment():
     message = None
+    tracking_number = None
 
     if request.method == "POST":
         package_id = request.form["package_id"]
@@ -141,14 +146,16 @@ def assign_shipment():
             VALUES (?, ?, ?, ?, ?, 'Pending', ?)
         """, (package_id, employee_id, vehicle_id, delivery_location, distance, expected_date))
         
+        tracking_number = cursor.lastrowid
+        
         conn.commit()
         
-        message = "Shipment assigned successfully!"
+        message = f"Shipment assigned successfully! Tracking Number: #{tracking_number}"
         
         cursor.close()
         conn.close()
 
-    return render_template("assign_shipment.html", message=message)
+    return render_template("assign_shipment.html", message=message, tracking_number=tracking_number)
 
 
  

@@ -49,5 +49,14 @@
     {% if message %}
         <p><strong>{{ message }}</strong></p>
     {% endif %}
+
+    {% if package_id %}
+        <div style="background-color: #FFF0F5; border: 3px solid #8B5E3C; border-radius: 15px; padding: 20px; margin: 20px auto; max-width: 500px; text-align: center;">
+            <h2 style="color: #8B5E3C;">📦 Package Created!</h2>
+            <p style="font-size: 1.2em;"><strong>Package ID:</strong></p>
+            <p style="font-size: 2em; color: #D8A39D; font-weight: bold;">{{ package_id }}</p>
+            <p><a href="/assign_shipment" style="color: #8B5E3C; font-weight: bold;">Assign to Shipment →</a></p>
+        </div>
+    {% endif %}
 </body>
 </html>

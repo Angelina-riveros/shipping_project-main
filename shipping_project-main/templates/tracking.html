@@ -26,17 +26,31 @@
     </form>
 
     {% if result %}
-        <h2>Shipment Details</h2>
-        <p><strong>Shipment ID:</strong> {{ result[0] }}</p>
-        <p><strong>Package ID:</strong> {{ result[1] }}</p>
-        <p><strong>Employee ID:</strong> {{ result[2] }}</p>
-        <p><strong>Vehicle ID:</strong> {{ result[3] }}</p>
-        <p><strong>Delivery Location:</strong> {{ result[4] }}</p>
-        <p><strong>Distance (miles):</strong> {{ result[5] }}</p>
-        <p><strong>Status:</strong> {{ result[6] }}</p>
-        <p><strong>Expected Delivery:</strong> {{ result[7] }}</p>
-        <p><strong>Customer Name:</strong> {{ result[8] }}</p>
-        <p><strong>Customer Email:</strong> {{ result[9] }}</p>
+        <div style="background-color: #FFF0F5; border: 2px solid #D8A39D; border-radius: 15px; padding: 25px; margin: 20px auto; max-width: 700px;">
+            <h2 style="text-align: center; color: #8B5E3C;">📦 Shipment Details</h2>
+            
+            <h3 style="color: #8B5E3C; border-bottom: 2px solid #D8A39D; padding-bottom: 10px;">Tracking Info</h3>
+            <p><strong>Tracking Number:</strong> {{ result[0] }}</p>
+            <p><strong>Status:</strong> <span style="color: #D8A39D; font-weight: bold;">{{ result[6] }}</span></p>
+            <p><strong>Expected Delivery:</strong> {{ result[7] }}</p>
+            
+            <h3 style="color: #8B5E3C; border-bottom: 2px solid #D8A39D; padding-bottom: 10px; margin-top: 20px;">Delivery Details</h3>
+            <p><strong>Delivery Location:</strong> {{ result[4] }}</p>
+            <p><strong>Distance:</strong> {{ result[5] }} miles</p>
+            
+            <h3 style="color: #8B5E3C; border-bottom: 2px solid #D8A39D; padding-bottom: 10px; margin-top: 20px;">Driver Information</h3>
+            <p><strong>Driver Name:</strong> {{ result[10] }}</p>
+            <p><strong>Driver Phone:</strong> {{ result[11] }}</p>
+            
+            <h3 style="color: #8B5E3C; border-bottom: 2px solid #D8A39D; padding-bottom: 10px; margin-top: 20px;">Vehicle Information</h3>
+            <p><strong>Vehicle Type:</strong> {{ result[13] }}</p>
+            <p><strong>Plate Number:</strong> {{ result[12] }}</p>
+            
+            <h3 style="color: #8B5E3C; border-bottom: 2px solid #D8A39D; padding-bottom: 10px; margin-top: 20px;">Customer Information</h3>
+            <p><strong>Customer Name:</strong> {{ result[8] }}</p>
+            <p><strong>Customer Email:</strong> {{ result[9] }}</p>
+            <p><strong>Package ID:</strong> {{ result[1] }}</p>
+        </div>
     {% endif %}
 </body>
 </html>
