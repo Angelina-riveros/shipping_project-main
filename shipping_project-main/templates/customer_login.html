@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .login-form-container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: linear-gradient(135deg, #FFF0F5, #FFD4D8);
+            border: 4px solid #8B5E3C;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 16px rgba(139, 94, 60, 0.3);
+        }
+        
+        .login-form-container h1 {
+            color: #8B5E3C;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .flash-message {
+            background-color: #FFE4E4;
+            color: #8B5E3C;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-link a {
+            color: #8B5E3C;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-form-container">
+        <h1>👤 Customer Login</h1>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST">
+            <label>Email Address:</label>
+            <input type="email" name="email" required placeholder="your.email@example.com"><br>
+            
+            <button type="submit">Login ✨</button>
+        </form>
+        
+        <div class="back-link">
+            <a href="/">← Back to Home</a>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background-color: rgba(139, 94, 60, 0.1); border-radius: 10px;">
+            <h3 style="color: #8B5E3C;">Test Customer Emails:</h3>
+            <ul style="color: #A0694F;">
+                <li>joe@gmail.com</li>
+                <li>buse@gmail.com</li>
+                <li>max@gmail.com</li>
+                <li>bob@gmail.com</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

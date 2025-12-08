@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session, flash
 from db import get_connection
 import os
 import subprocess
 
 app = Flask(__name__)
+app.secret_key = 'your-secret-key-here-change-in-production'  # Change this in production!
 
 # Initialize database on first run
 def init_db():
@@ -15,12 +16,142 @@ def init_db():
 init_db()
 
 
- 
-#Homepage
- 
+# LOGIN PAGE
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("login.html")
+
+# CUSTOMER LOGIN
+@app.route("/customer_login", methods=["GET", "POST"])
+def customer_login():
+    if request.method == "POST":
+        email = request.form["email"]
+        
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Customer WHERE email = ?", (email,))
+        customer = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if customer:
+            session['user_type'] = 'customer'
+            session['user_id'] = customer['customer_id']
+            session['user_name'] = customer['name']
+            session['user_email'] = customer['email']
+            return redirect("/customer_dashboard")
+        else:
+            flash("Email not found. Please check your email or contact support.")
+            return redirect("/customer_login")
+    
+    return render_template("customer_login.html")
+
+# EMPLOYEE LOGIN
+@app.route("/employee_login", methods=["GET", "POST"])
+def employee_login():
+    if request.method == "POST":
+        email = request.form["email"]
+        
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Employee WHERE email = ?", (email,))
+        employee = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if employee:
+            session['user_type'] = 'employee'
+            session['user_id'] = employee['employee_id']
+            session['user_name'] = employee['name']
+            session['user_email'] = employee['email']
+            session['user_role'] = employee['role']
+            return redirect("/employee_dashboard")
+        else:
+            flash("Email not found. Please check your email or contact support.")
+            return redirect("/employee_login")
+    
+    return render_template("employee_login.html")
+
+# LOGOUT
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+# CUSTOMER DASHBOARD
+@app.route("/customer_dashboard")
+def customer_dashboard():
+    if 'user_type' not in session or session['user_type'] != 'customer':
+        return redirect("/")
+    
+    customer_id = session['user_id']
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Get customer's packages and shipments
+    cursor.execute("""
+        SELECT Package.package_id, Shipment.shipment_id, Shipment.delivery_location, 
+               Shipment.status, Shipment.expected_delivery_date
+        FROM Package
+        LEFT JOIN Shipment ON Package.package_id = Shipment.package_id
+        WHERE Package.customer_id = ?
+        ORDER BY Package.package_id DESC
+    """, (customer_id,))
+    shipments = cursor.fetchall()
+    
+    # Get customer's payments
+    cursor.execute("""
+        SELECT Payment.payment_id, Payment.shipment_id, Payment.amount, 
+               Payment.method, Payment.payment_date
+        FROM Payment
+        JOIN Shipment ON Payment.shipment_id = Shipment.shipment_id
+        JOIN Package ON Shipment.package_id = Package.package_id
+        WHERE Package.customer_id = ?
+        ORDER BY Payment.payment_date DESC
+    """, (customer_id,))
+    payments = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template("customer_dashboard.html", shipments=shipments, payments=payments)
+
+# EMPLOYEE DASHBOARD
+@app.route("/employee_dashboard")
+def employee_dashboard():
+    if 'user_type' not in session or session['user_type'] != 'employee':
+        return redirect("/")
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Get all shipments
+    cursor.execute("""
+        SELECT Shipment.shipment_id, Customer.name, Shipment.delivery_location, 
+               Shipment.status, Shipment.expected_delivery_date, Employee.name as driver_name
+        FROM Shipment
+        JOIN Package ON Shipment.package_id = Package.package_id
+        JOIN Customer ON Package.customer_id = Customer.customer_id
+        LEFT JOIN Employee ON Shipment.employee_id = Employee.employee_id
+        ORDER BY Shipment.shipment_id DESC
+    """)
+    shipments = cursor.fetchall()
+    
+    # Get all inquiries
+    cursor.execute("""
+        SELECT Inquiry.inquiry_id, Customer.name, Inquiry.subject, Inquiry.created_at
+        FROM Inquiry
+        JOIN Customer ON Inquiry.customer_id = Customer.customer_id
+        ORDER BY Inquiry.created_at DESC
+        LIMIT 10
+    """)
+    inquiries = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template("employee_dashboard.html", shipments=shipments, inquiries=inquiries)
 
 
 
@@ -250,6 +381,90 @@ def inquiries():
     cursor.close()
     conn.close()
     return render_template("inquiries.html", rows=rows)
+
+
+# VIEW ALL PAYMENTS
+@app.route("/payments")
+def payments():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT Payment.*, Shipment.delivery_location, Customer.name as customer_name
+        FROM Payment
+        JOIN Shipment ON Payment.shipment_id = Shipment.shipment_id
+        JOIN Package ON Shipment.package_id = Package.package_id
+        JOIN Customer ON Package.customer_id = Customer.customer_id
+    """)
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("payments.html", rows=rows)
+
+
+# MAKE PAYMENT
+@app.route("/make_payment", methods=["GET", "POST"])
+def make_payment():
+    message = None
+    payment_id = None
+    shipment_info = None
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+        shipment_id = request.form["shipment_id"]
+        amount = request.form["amount"]
+        method = request.form["method"]
+        
+        # Verify shipment exists
+        cursor.execute("""
+            SELECT Shipment.shipment_id, Customer.name, Shipment.delivery_location, 
+                   Shipment.price_estimate, Shipment.status
+            FROM Shipment
+            JOIN Package ON Shipment.package_id = Package.package_id
+            JOIN Customer ON Package.customer_id = Customer.customer_id
+            WHERE Shipment.shipment_id = ?
+        """, (shipment_id,))
+        
+        shipment = cursor.fetchone()
+        
+        if shipment:
+            # Insert payment
+            cursor.execute("""
+                INSERT INTO Payment (shipment_id, payment_date, amount, method)
+                VALUES (?, datetime('now'), ?, ?)
+            """, (shipment_id, amount, method))
+            
+            payment_id = cursor.lastrowid
+            conn.commit()
+            
+            message = f"Payment #{payment_id} processed successfully for {shipment['name']}'s shipment!"
+            shipment_info = shipment
+        else:
+            message = "Error: Shipment ID not found. Please check and try again."
+        
+        cursor.close()
+        conn.close()
+        return render_template("make_payment.html", message=message, payment_id=payment_id, shipment_info=shipment_info)
+    
+    # GET request - show available shipments
+    cursor.execute("""
+        SELECT Shipment.shipment_id, Customer.name, Shipment.delivery_location, 
+               Shipment.price_estimate, Shipment.status
+        FROM Shipment
+        JOIN Package ON Shipment.package_id = Package.package_id
+        JOIN Customer ON Package.customer_id = Customer.customer_id
+        ORDER BY Shipment.shipment_id DESC
+    """)
+    
+    available_shipments = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+
+    return render_template("make_payment.html", message=message, payment_id=payment_id, 
+                         shipment_info=shipment_info, available_shipments=available_shipments)
 
 
 

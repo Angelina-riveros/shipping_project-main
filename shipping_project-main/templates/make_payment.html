@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Make Payment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System</h2>
+        <nav>
+            {% if session.user_type == 'customer' %}
+                <a href="/customer_dashboard">Dashboard</a>
+            {% elif session.user_type == 'employee' %}
+                <a href="/employee_dashboard">Dashboard</a>
+            {% else %}
+                <a href="/">Home</a>
+            {% endif %}
+            <a href="/tracking">Track</a>
+            <a href="/make_payment">Make Payment</a>
+            {% if session.user_type %}
+                <a href="/logout">Logout</a>
+            {% endif %}
+        </nav>
+    </header>
+    <h1>Make a Payment 💳</h1>
+
+    {% if not payment_id %}
+    <h3>Available Shipments</h3>
+    <table border="1" style="margin-bottom: 30px;">
+        <tr>
+            <th>Shipment ID</th>
+            <th>Customer</th>
+            <th>Delivery Location</th>
+            <th>Price Estimate</th>
+            <th>Status</th>
+        </tr>
+        {% for ship in available_shipments %}
+        <tr>
+            <td>{{ ship['shipment_id'] }}</td>
+            <td>{{ ship['name'] }}</td>
+            <td>{{ ship['delivery_location'] }}</td>
+            <td>${{ "%.2f"|format(ship['price_estimate']) if ship['price_estimate'] else 'N/A' }}</td>
+            <td>{{ ship['status'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <form method="POST">
+        <h3>Payment Information</h3>
+
+        <label>Shipment ID (Tracking Number):</label>
+        <input type="number" name="shipment_id" required><br>
+
+        <label>Amount ($):</label>
+        <input type="number" step="0.01" name="amount" required><br>
+
+        <label>Payment Method:</label>
+        <select name="method" required>
+            <option value="">Select Method</option>
+            <option value="Credit">Credit Card</option>
+            <option value="Debit">Debit Card</option>
+            <option value="PayPal">PayPal</option>
+            <option value="Cash">Cash</option>
+        </select><br><br>
+
+        <button type="submit">Submit Payment ✨</button>
+    </form>
+
+    {% if message %}
+        <p style="margin-top: 20px; padding: 15px; background-color: {% if payment_id %}#D8F4D8{% else %}#FFE4E4{% endif %}; border-radius: 10px;">
+            <strong>{{ message }}</strong>
+        </p>
+    {% endif %}
+
+    {% if payment_id and shipment_info %}
+        <div style="background-color: #FFF0F5; border: 3px solid #8B5E3C; border-radius: 15px; padding: 20px; margin: 20px auto; max-width: 500px; text-align: center;">
+            <h2 style="color: #8B5E3C;">💳 Payment Successful!</h2>
+            <p style="font-size: 1.2em;"><strong>Payment ID:</strong></p>
+            <p style="font-size: 2em; color: #D8A39D; font-weight: bold;">{{ payment_id }}</p>
+            <hr style="border-color: #D8A39D;">
+            <p><strong>Customer:</strong> {{ shipment_info['name'] }}</p>
+            <p><strong>Shipment ID:</strong> {{ shipment_info['shipment_id'] }}</p>
+            <p><strong>Delivery Location:</strong> {{ shipment_info['delivery_location'] }}</p>
+            <p><strong>Status:</strong> {{ shipment_info['status'] }}</p>
+            <hr style="border-color: #D8A39D;">
+            <p><a href="/payments" style="color: #8B5E3C; font-weight: bold;">View All Payments →</a></p>
+            <p><a href="/make_payment" style="color: #8B5E3C; font-weight: bold;">Make Another Payment →</a></p>
+        </div>
+    {% endif %}
+</body>
+</html>

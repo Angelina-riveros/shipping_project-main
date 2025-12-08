@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System - Employee Portal</h2>
+        <nav>
+            <a href="/employee_dashboard">Dashboard</a>
+            <a href="/assign_shipment">Assign Shipment</a>
+            <a href="/update_status">Update Status</a>
+            <a href="/shipments">All Shipments</a>
+            <a href="/vehicles">Vehicles</a>
+            <a href="/customers">Customers</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+    
+    <h1>Welcome, {{ session.user_name }}! 👨‍💼</h1>
+    
+    <div style="background: linear-gradient(135deg, #FFF0F5, #FFD4D8); padding: 20px; border-radius: 15px; margin: 20px 0;">
+        <h3 style="color: #8B5E3C;">Employee Information</h3>
+        <p><strong>Name:</strong> {{ session.user_name }}</p>
+        <p><strong>Email:</strong> {{ session.user_email }}</p>
+        <p><strong>Role:</strong> {{ session.user_role }}</p>
+        <p><strong>Employee ID:</strong> {{ session.user_id }}</p>
+    </div>
+    
+    <h2>📦 Recent Shipments</h2>
+    <table border="1">
+        <tr>
+            <th>Tracking #</th>
+            <th>Customer</th>
+            <th>Delivery Location</th>
+            <th>Status</th>
+            <th>Expected Delivery</th>
+            <th>Driver</th>
+            <th>Actions</th>
+        </tr>
+        
+        {% for ship in shipments %}
+        <tr>
+            <td><strong style="color: #8B5E3C;">{{ ship['shipment_id'] }}</strong></td>
+            <td>{{ ship['name'] }}</td>
+            <td>{{ ship['delivery_location'] }}</td>
+            <td>
+                <span style="padding: 5px 10px; border-radius: 5px; background-color: 
+                    {% if ship['status'] == 'Delivered' %}#D8F4D8
+                    {% elif ship['status'] == 'In Transit' %}#FFE4A0
+                    {% else %}#FFE4E4{% endif %};">
+                    {{ ship['status'] }}
+                </span>
+            </td>
+            <td>{{ ship['expected_delivery_date'] }}</td>
+            <td>{{ ship['driver_name'] or 'Not assigned' }}</td>
+            <td>
+                <a href="/update_status" style="color: #8B5E3C; font-weight: bold;">Update →</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <h2>📞 Recent Customer Inquiries</h2>
+    <table border="1">
+        <tr>
+            <th>Inquiry ID</th>
+            <th>Customer</th>
+            <th>Subject</th>
+            <th>Date</th>
+        </tr>
+        
+        {% for inq in inquiries %}
+        <tr>
+            <td>{{ inq['inquiry_id'] }}</td>
+            <td>{{ inq['name'] }}</td>
+            <td>{{ inq['subject'] }}</td>
+            <td>{{ inq['created_at'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="/assign_shipment" style="background: linear-gradient(135deg, #8B5E3C, #A0694F); color: white; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block; margin: 10px;">
+            🚚 Assign Shipment
+        </a>
+        <a href="/update_status" style="background: linear-gradient(135deg, #8B5E3C, #A0694F); color: white; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block; margin: 10px;">
+            ✏️ Update Status
+        </a>
+        <a href="/shipments" style="background: linear-gradient(135deg, #8B5E3C, #A0694F); color: white; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block; margin: 10px;">
+            📋 View All Shipments
+        </a>
+    </div>
+</body>
+</html>

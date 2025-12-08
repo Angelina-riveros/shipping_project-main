@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Delivery Tracking System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .login-box {
+            background: linear-gradient(135deg, #FFF0F5, #FFD4D8);
+            border: 4px solid #8B5E3C;
+            border-radius: 20px;
+            padding: 40px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(139, 94, 60, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .login-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 24px rgba(139, 94, 60, 0.4);
+        }
+        
+        .login-box h2 {
+            color: #8B5E3C;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        
+        .login-box p {
+            color: #A0694F;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .login-box a {
+            display: inline-block;
+            background: linear-gradient(135deg, #8B5E3C, #A0694F);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .login-box a:hover {
+            background: linear-gradient(135deg, #A0694F, #D8A39D);
+            transform: scale(1.05);
+        }
+        
+        .welcome-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .welcome-header h1 {
+            color: #8B5E3C;
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-header p {
+            color: #A0694F;
+            font-size: 1.3em;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-header">
+        <h1>📦 Delivery Tracking System</h1>
+        <p>Welcome! Please select your login type</p>
+    </div>
+    
+    <div class="login-container">
+        <div class="login-box">
+            <h2>👤 Customer</h2>
+            <p>Track your packages<br>Make payments<br>View delivery status</p>
+            <a href="/customer_login">Customer Login →</a>
+        </div>
+        
+        <div class="login-box">
+            <h2>👨‍💼 Employee</h2>
+            <p>Manage shipments<br>Update delivery status<br>Handle inquiries</p>
+            <a href="/employee_login">Employee Login →</a>
+        </div>
+    </div>
+</body>
+</html>

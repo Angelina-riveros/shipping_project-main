@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>📦 Delivery Tracking System - Customer Portal</h2>
+        <nav>
+            <a href="/customer_dashboard">Dashboard</a>
+            <a href="/tracking">Track Shipment</a>
+            <a href="/add_shipment">Create Package</a>
+            <a href="/make_payment">Make Payment</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+    
+    <h1>Welcome, {{ session.user_name }}! 👋</h1>
+    
+    <div style="background: linear-gradient(135deg, #FFF0F5, #FFD4D8); padding: 20px; border-radius: 15px; margin: 20px 0;">
+        <h3 style="color: #8B5E3C;">Customer Information</h3>
+        <p><strong>Name:</strong> {{ session.user_name }}</p>
+        <p><strong>Email:</strong> {{ session.user_email }}</p>
+        <p><strong>Customer ID:</strong> {{ session.user_id }}</p>
+    </div>
+    
+    <h2>📦 Your Shipments</h2>
+    <table border="1">
+        <tr>
+            <th>Package ID</th>
+            <th>Tracking Number</th>
+            <th>Delivery Location</th>
+            <th>Status</th>
+            <th>Expected Delivery</th>
+            <th>Actions</th>
+        </tr>
+        
+        {% if shipments %}
+            {% for ship in shipments %}
+            <tr>
+                <td>{{ ship['package_id'] }}</td>
+                <td>
+                    {% if ship['shipment_id'] %}
+                        <strong style="color: #8B5E3C;">{{ ship['shipment_id'] }}</strong>
+                    {% else %}
+                        <span style="color: #999;">Not assigned</span>
+                    {% endif %}
+                </td>
+                <td>{{ ship['delivery_location'] or 'Pending assignment' }}</td>
+                <td>
+                    <span style="padding: 5px 10px; border-radius: 5px; background-color: 
+                        {% if ship['status'] == 'Delivered' %}#D8F4D8
+                        {% elif ship['status'] == 'In Transit' %}#FFE4A0
+                        {% else %}#FFE4E4{% endif %};">
+                        {{ ship['status'] or 'Pending' }}
+                    </span>
+                </td>
+                <td>{{ ship['expected_delivery_date'] or 'TBD' }}</td>
+                <td>
+                    {% if ship['shipment_id'] %}
+                        <a href="/tracking?tracking={{ ship['shipment_id'] }}" style="color: #8B5E3C; font-weight: bold;">Track →</a>
+                    {% else %}
+                        <a href="/assign_shipment" style="color: #A0694F;">Assign →</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 20px;">
+                    No shipments yet. <a href="/add_shipment" style="color: #8B5E3C; font-weight: bold;">Create your first package!</a>
+                </td>
+            </tr>
+        {% endif %}
+    </table>
+    
+    <h2>💳 Your Payments</h2>
+    <table border="1">
+        <tr>
+            <th>Payment ID</th>
+            <th>Shipment ID</th>
+            <th>Amount</th>
+            <th>Payment Method</th>
+            <th>Date</th>
+        </tr>
+        
+        {% if payments %}
+            {% for pay in payments %}
+            <tr>
+                <td>{{ pay['payment_id'] }}</td>
+                <td>{{ pay['shipment_id'] }}</td>
+                <td>${{ "%.2f"|format(pay['amount']) }}</td>
+                <td>{{ pay['method'] }}</td>
+                <td>{{ pay['payment_date'] }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 20px;">
+                    No payments yet. <a href="/make_payment" style="color: #8B5E3C; font-weight: bold;">Make your first payment!</a>
+                </td>
+            </tr>
+        {% endif %}
+    </table>
+    
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="/add_shipment" style="background: linear-gradient(135deg, #8B5E3C, #A0694F); color: white; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block; margin: 10px;">
+            📦 Create New Package
+        </a>
+        <a href="/make_payment" style="background: linear-gradient(135deg, #8B5E3C, #A0694F); color: white; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block; margin: 10px;">
+            💳 Make Payment
+        </a>
+    </div>
+</body>
+</html>

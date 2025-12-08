@@ -8,13 +8,18 @@
     <header>
         <h2>📦 Delivery Tracking System</h2>
         <nav>
-            <a href="/">Home</a>
+            {% if session.user_type == 'customer' %}
+                <a href="/customer_dashboard">Dashboard</a>
+            {% elif session.user_type == 'employee' %}
+                <a href="/employee_dashboard">Dashboard</a>
+            {% else %}
+                <a href="/">Home</a>
+            {% endif %}
             <a href="/tracking">Track</a>
             <a href="/add_shipment">Add Shipment</a>
-            <a href="/shipments">Shipments</a>
-            <a href="/customers">Customers</a>
-            <a href="/employees">Employees</a>
-            <a href="/vehicles">Vehicles</a>
+            {% if session.user_type %}
+                <a href="/logout">Logout</a>
+            {% endif %}
         </nav>
     </header>
     <h1>Add a New Package</h1>
