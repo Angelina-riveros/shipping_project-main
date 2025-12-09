@@ -59,6 +59,7 @@ width_in REAL,
 height_in REAL,
 declared_value REAL,
 special_cargo TEXT,
+delivery_location TEXT,
 FOREIGN KEY(customer_id) REFERENCES Customer(customer_id)
 )
 """)
@@ -225,18 +226,18 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 # INSERT PAYMENT DATA
 # ---------------------------------------
 payments = [
-(1, '2025-11-12', 50.00, 'Credit'),
-(2, '2025-11-13', 35.00, 'Debit'),
-(3, '2025-11-10', 75.00, 'PayPal'),
-(4, '2025-11-14', 60.00, 'Cash'),
-(5, '2025-11-15', 80.00, 'Credit'),
-(6, '2025-11-16', 40.00, 'Debit'),
-(7, '2025-11-11', 55.00, 'PayPal')
+(1, 1, '2025-11-12', 50.00, 'Credit'),
+(2, 2, '2025-11-13', 35.00, 'Debit'),
+(3, 3, '2025-11-10', 75.00, 'PayPal'),
+(4, 4, '2025-11-14', 60.00, 'Cash'),
+(5, 5, '2025-11-15', 80.00, 'Credit'),
+(6, 6, '2025-11-16', 40.00, 'Debit'),
+(7, 7, '2025-11-11', 55.00, 'PayPal')
 ]
 
 cursor.executemany("""
-INSERT INTO Payment (shipment_id, payment_date, amount, method)
-VALUES (?, ?, ?, ?)
+INSERT INTO Payment (payment_id, shipment_id, payment_date, amount, method)
+VALUES (?, ?, ?, ?, ?)
 """, payments)
 
 

@@ -148,10 +148,22 @@ def employee_dashboard():
     """)
     inquiries = cursor.fetchall()
     
+    # Get unassigned packages (packages without shipments)
+    cursor.execute("""
+        SELECT Package.package_id, Customer.name, Package.weight_lbs, 
+               Package.delivery_location, Package.declared_value, Package.special_cargo
+        FROM Package
+        JOIN Customer ON Package.customer_id = Customer.customer_id
+        LEFT JOIN Shipment ON Package.package_id = Shipment.package_id
+        WHERE Shipment.shipment_id IS NULL
+        ORDER BY Package.package_id DESC
+    """)
+    unassigned_packages = cursor.fetchall()
+    
     cursor.close()
     conn.close()
     
-    return render_template("employee_dashboard.html", shipments=shipments, inquiries=inquiries)
+    return render_template("employee_dashboard.html", shipments=shipments, inquiries=inquiries, unassigned_packages=unassigned_packages)
 
 
 
@@ -232,21 +244,22 @@ def add_shipment():
         height = request.form["height"]
         declared_value = request.form["value"]
         special_cargo = request.form.get("special", "No")
+        delivery_location = request.form["delivery_location"]
         
         conn = get_connection()
         cursor = conn.cursor()
         
-        #Insert package
+        #Insert package with delivery_location
         cursor.execute("""
-            INSERT INTO Package (customer_id, weight_lbs, length_in, width_in, height_in, declared_value, special_cargo)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (customer_id, weight, length, width, height, declared_value, special_cargo))
+            INSERT INTO Package (customer_id, weight_lbs, length_in, width_in, height_in, declared_value, special_cargo, delivery_location)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (customer_id, weight, length, width, height, declared_value, special_cargo, delivery_location))
         
         package_id = cursor.lastrowid
         
         conn.commit()
         
-        message = f"Package #{package_id} created successfully! Now assign it to a shipment."
+        message = f"Package #{package_id} created successfully! An employee will assign it to a shipment."
         
         cursor.close()
         conn.close()
@@ -256,37 +269,69 @@ def add_shipment():
 
 # ASSIGN SHIPMENT
 @app.route("/assign_shipment", methods=["GET", "POST"])
-def assign_shipment():
+@app.route("/assign_shipment/<int:package_id>", methods=["GET", "POST"])
+def assign_shipment(package_id=None):
     message = None
     tracking_number = None
+    package_info = None
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Get available employees (drivers)
+    cursor.execute("SELECT employee_id, name, role FROM Employee ORDER BY name")
+    employees = cursor.fetchall()
+    
+    # Get available vehicles
+    cursor.execute("SELECT vehicle_id, plate_number, vehicle_type FROM Vehicle ORDER BY vehicle_id")
+    vehicles = cursor.fetchall()
+    
+    # If package_id is provided in URL, get package info
+    if package_id:
+        cursor.execute("""
+            SELECT Package.*, Customer.name as customer_name
+            FROM Package
+            JOIN Customer ON Package.customer_id = Customer.customer_id
+            WHERE Package.package_id = ?
+        """, (package_id,))
+        package_info = cursor.fetchone()
+        
+        if not package_info:
+            message = "Error: Package not found."
+            package_id = None
 
     if request.method == "POST":
-        package_id = request.form["package_id"]
+        package_id = request.form.get("package_id", package_id)
         employee_id = request.form["employee_id"]
         vehicle_id = request.form["vehicle_id"]
-        delivery_location = request.form["location"]
         distance = request.form["distance"]
         expected_date = request.form["date"]
         
-        conn = get_connection()
-        cursor = conn.cursor()
+        # Get delivery_location from Package table
+        cursor.execute("SELECT delivery_location FROM Package WHERE package_id = ?", (package_id,))
+        package = cursor.fetchone()
         
-        # Insert shipment
-        cursor.execute("""
-            INSERT INTO Shipment (package_id, employee_id, vehicle_id, delivery_location, distance_miles, status, expected_delivery_date)
-            VALUES (?, ?, ?, ?, ?, 'Pending', ?)
-        """, (package_id, employee_id, vehicle_id, delivery_location, distance, expected_date))
-        
-        tracking_number = cursor.lastrowid
-        
-        conn.commit()
-        
-        message = f"Shipment assigned successfully! Tracking Number: #{tracking_number}"
-        
-        cursor.close()
-        conn.close()
+        if not package:
+            message = "Error: Package ID not found. Please check the package ID."
+        else:
+            delivery_location = package['delivery_location']
+            
+            # Insert shipment
+            cursor.execute("""
+                INSERT INTO Shipment (package_id, employee_id, vehicle_id, delivery_location, distance_miles, status, expected_delivery_date)
+                VALUES (?, ?, ?, ?, ?, 'Pending', ?)
+            """, (package_id, employee_id, vehicle_id, delivery_location, distance, expected_date))
+            
+            tracking_number = cursor.lastrowid
+            
+            conn.commit()
+            
+            message = f"Shipment assigned successfully! Tracking Number: #{tracking_number}"
+    
+    cursor.close()
+    conn.close()
 
-    return render_template("assign_shipment.html", message=message, tracking_number=tracking_number)
+    return render_template("assign_shipment.html", message=message, tracking_number=tracking_number, package_info=package_info, package_id=package_id, employees=employees, vehicles=vehicles)
 
 
  
@@ -449,14 +494,27 @@ def make_payment():
         return render_template("make_payment.html", message=message, payment_id=payment_id, shipment_info=shipment_info)
     
     # GET request - show available shipments
-    cursor.execute("""
-        SELECT Shipment.shipment_id, Customer.name, Shipment.delivery_location, 
-               Shipment.price_estimate, Shipment.status
-        FROM Shipment
-        JOIN Package ON Shipment.package_id = Package.package_id
-        JOIN Customer ON Package.customer_id = Customer.customer_id
-        ORDER BY Shipment.shipment_id DESC
-    """)
+    # If customer is logged in, show only their shipments
+    if 'user_type' in session and session['user_type'] == 'customer':
+        cursor.execute("""
+            SELECT Shipment.shipment_id, Customer.name, Shipment.delivery_location, 
+                   Shipment.price_estimate, Shipment.status
+            FROM Shipment
+            JOIN Package ON Shipment.package_id = Package.package_id
+            JOIN Customer ON Package.customer_id = Customer.customer_id
+            WHERE Customer.customer_id = ?
+            ORDER BY Shipment.shipment_id DESC
+        """, (session['user_id'],))
+    else:
+        # Show all shipments for employees or non-logged in users
+        cursor.execute("""
+            SELECT Shipment.shipment_id, Customer.name, Shipment.delivery_location, 
+                   Shipment.price_estimate, Shipment.status
+            FROM Shipment
+            JOIN Package ON Shipment.package_id = Package.package_id
+            JOIN Customer ON Package.customer_id = Customer.customer_id
+            ORDER BY Shipment.shipment_id DESC
+        """)
     
     available_shipments = cursor.fetchall()
     

@@ -18,15 +18,51 @@
         </nav>
     </header>
     
-    <h1>Welcome, {{ session.user_name }}! 👨‍💼</h1>
+    <h1 style="text-align: center;">Welcome, {{ session.user_name }}! 👨‍💼</h1>
     
-    <div style="background: linear-gradient(135deg, #FFF0F5, #FFD4D8); padding: 20px; border-radius: 15px; margin: 20px 0;">
-        <h3 style="color: #8B5E3C;">Employee Information</h3>
-        <p><strong>Name:</strong> {{ session.user_name }}</p>
-        <p><strong>Email:</strong> {{ session.user_email }}</p>
-        <p><strong>Role:</strong> {{ session.user_role }}</p>
-        <p><strong>Employee ID:</strong> {{ session.user_id }}</p>
+    <div style="background: linear-gradient(135deg, #FFF0F5, #FFD4D8); padding: 30px; border-radius: 15px; margin: 20px auto; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h3 style="color: #8B5E3C; margin-bottom: 20px; text-align: center;">Employee Information</h3>
+        <p style="font-size: 16px; margin: 10px 0; text-align: center;"><strong style="color: #8B5E3C;">Name:</strong> <span style="color: #333;">{{ session.user_name or 'N/A' }}</span></p>
+        <p style="font-size: 16px; margin: 10px 0; text-align: center;"><strong style="color: #8B5E3C;">Email:</strong> <span style="color: #333;">{{ session.user_email or 'N/A' }}</span></p>
+        <p style="font-size: 16px; margin: 10px 0; text-align: center;"><strong style="color: #8B5E3C;">Role:</strong> <span style="color: #333;">{{ session.user_role or 'N/A' }}</span></p>
+        <p style="font-size: 16px; margin: 10px 0; text-align: center;"><strong style="color: #8B5E3C;">Employee ID:</strong> <span style="color: #333;">{{ session.user_id or 'N/A' }}</span></p>
     </div>
+    
+    <h2>⚠️ Unassigned Packages</h2>
+    {% if unassigned_packages %}
+    <div style="background-color: #FFE4A0; border: 2px solid #D8A39D; border-radius: 10px; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; font-weight: bold; color: #8B5E3C;">📦 {{ unassigned_packages|length }} package(s) waiting to be assigned to shipments!</p>
+    </div>
+    <table border="1">
+        <tr>
+            <th>Package ID</th>
+            <th>Customer</th>
+            <th>Delivery Location</th>
+            <th>Weight (lbs)</th>
+            <th>Value ($)</th>
+            <th>Special Cargo</th>
+            <th>Actions</th>
+        </tr>
+        
+        {% for pkg in unassigned_packages %}
+        <tr style="background-color: #FFF9E6;">
+            <td><strong style="color: #D8A39D;">{{ pkg['package_id'] }}</strong></td>
+            <td>{{ pkg['name'] }}</td>
+            <td>{{ pkg['delivery_location'] }}</td>
+            <td>{{ pkg['weight_lbs'] }}</td>
+            <td>${{ "%.2f"|format(pkg['declared_value']) }}</td>
+            <td>{{ pkg['special_cargo'] }}</td>
+            <td>
+                <a href="/assign_shipment/{{ pkg['package_id'] }}" style="color: #8B5E3C; font-weight: bold;">Assign Now →</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <div style="background-color: #D8F4D8; border: 2px solid #90EE90; border-radius: 10px; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; font-weight: bold; color: #2E7D32;">✓ All packages have been assigned to shipments!</p>
+    </div>
+    {% endif %}
     
     <h2>📦 Recent Shipments</h2>
     <table border="1">
