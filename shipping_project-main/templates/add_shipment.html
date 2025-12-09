@@ -27,8 +27,10 @@
     <form method="POST" style="max-width: 600px; margin: 0 auto;">
         <h3 style="text-align: center;">Package Information</h3>
 
+        {% if not session.user_type or session.user_type != 'customer' %}
         <label>Customer ID:</label>
         <input type="number" name="customer_id" required><br>
+        {% endif %}
 
         <label>Weight (lbs):</label>
         <input type="number" step="0.01" name="weight" required><br>

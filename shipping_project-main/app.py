@@ -237,7 +237,11 @@ def add_shipment():
 
     if request.method == "POST":
         #Package data
-        customer_id = request.form["customer_id"]
+        # Use logged-in customer's ID if available, otherwise get from form
+        if 'user_type' in session and session['user_type'] == 'customer':
+            customer_id = session['user_id']
+        else:
+            customer_id = request.form["customer_id"]
         weight = request.form["weight"]
         length = request.form["length"]
         width = request.form["width"]
