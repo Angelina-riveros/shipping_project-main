@@ -11,7 +11,7 @@
             <a href="/customer_dashboard">Dashboard</a>
             <a href="/tracking">Track Shipment</a>
             <a href="/add_shipment">Add Package</a>
-            <a href="/make_payment">Make Payment</a>
+            <a href="/reschedule">Reschedule Delivery</a>
             <a href="/logout">Logout</a>
         </nav>
     </header>
@@ -61,7 +61,7 @@
                     {% if ship['shipment_id'] %}
                         <a href="/tracking?tracking={{ ship['shipment_id'] }}" style="color: #8B5E3C; font-weight: bold;">Track →</a>
                     {% else %}
-                        <a href="/assign_shipment" style="color: #A0694F;">Assign →</a>
+                        <span style="color: #999; font-style: italic;">Awaiting assignment</span>
                     {% endif %}
                 </td>
             </tr>

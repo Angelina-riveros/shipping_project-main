@@ -173,11 +173,24 @@ def employee_dashboard():
 @app.route("/tracking", methods=["GET", "POST"])
 def tracking():
     result = None
+    my_shipments = []
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # If customer is logged in, get their shipments for dropdown
+    if 'user_type' in session and session['user_type'] == 'customer':
+        cursor.execute("""
+            SELECT Shipment.shipment_id, Shipment.delivery_location, Shipment.status
+            FROM Shipment
+            JOIN Package ON Shipment.package_id = Package.package_id
+            WHERE Package.customer_id = ?
+            ORDER BY Shipment.shipment_id DESC
+        """, (session['user_id'],))
+        my_shipments = cursor.fetchall()
+    
     if request.method == "POST":
         tracking_number = request.form["tracking"]
-
-        conn = get_connection()
-        cursor = conn.cursor()
 
         cursor.execute("""
                        SELECT Shipment.*, Customer.name, Customer.email, 
@@ -195,21 +208,52 @@ def tracking():
         
         cursor.close()
         conn.close()
+    else:
+        cursor.close()
+        conn.close()
 
-    return render_template("tracking.html", result=result)
+    return render_template("tracking.html", result=result, my_shipments=my_shipments)
 
 
 #Reschedule delivery
 @app.route("/reschedule", methods=["GET", "POST"])
 def reschedule():
     message = None
+    my_shipments = []
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # If customer is logged in, show their shipments
+    if 'user_type' in session and session['user_type'] == 'customer':
+        cursor.execute("""
+            SELECT Shipment.shipment_id, Shipment.delivery_location, 
+                   Shipment.status, Shipment.expected_delivery_date
+            FROM Shipment
+            JOIN Package ON Shipment.package_id = Package.package_id
+            WHERE Package.customer_id = ?
+            ORDER BY Shipment.shipment_id DESC
+        """, (session['user_id'],))
+        my_shipments = cursor.fetchall()
 
     if request.method == "POST":
         shipment_id = request.form["tracking"]
         new_date = request.form["date"]
         
-        conn = get_connection()
-        cursor = conn.cursor()
+        # Verify customer owns this shipment if logged in as customer
+        if 'user_type' in session and session['user_type'] == 'customer':
+            cursor.execute("""
+                SELECT Shipment.shipment_id
+                FROM Shipment
+                JOIN Package ON Shipment.package_id = Package.package_id
+                WHERE Shipment.shipment_id = ? AND Package.customer_id = ?
+            """, (shipment_id, session['user_id']))
+            
+            if not cursor.fetchone():
+                message = "Error: You can only reschedule your own shipments."
+                cursor.close()
+                conn.close()
+                return render_template("reschedule.html", message=message, my_shipments=my_shipments)
         
         cursor.execute("""
                        UPDATE Shipment
@@ -219,56 +263,126 @@ def reschedule():
         
         conn.commit()
         
-        message = "Delivery date updated successfully!"
+        message = f"Delivery date for shipment #{shipment_id} updated successfully to {new_date}!"
+        
+        # Refresh shipments list
+        if 'user_type' in session and session['user_type'] == 'customer':
+            cursor.execute("""
+                SELECT Shipment.shipment_id, Shipment.delivery_location, 
+                       Shipment.status, Shipment.expected_delivery_date
+                FROM Shipment
+                JOIN Package ON Shipment.package_id = Package.package_id
+                WHERE Package.customer_id = ?
+                ORDER BY Shipment.shipment_id DESC
+            """, (session['user_id'],))
+            my_shipments = cursor.fetchall()
         
         cursor.close()
         conn.close()
 
-    return render_template("reschedule.html", message=message)
+    else:
+        cursor.close()
+        conn.close()
+
+    return render_template("reschedule.html", message=message, my_shipments=my_shipments)
 
 
  
-# ADD NEW PACKAGE
+# ADD NEW PACKAGE (with upfront payment for customers)
  
 @app.route("/add_shipment", methods=["GET", "POST"])
 def add_shipment():
     message = None
     package_id = None
+    calculated_value = None
+    payment_id = None
+    show_payment_form = False
 
     if request.method == "POST":
-        #Package data
-        # Use logged-in customer's ID if available, otherwise get from form
-        if 'user_type' in session and session['user_type'] == 'customer':
-            customer_id = session['user_id']
+        # Check if this is payment submission
+        if 'payment_method' in request.form:
+            # Process payment and create package
+            if 'user_type' in session and session['user_type'] == 'customer':
+                customer_id = session['user_id']
+            else:
+                customer_id = request.form["customer_id"]
+            
+            # Get package data from hidden fields
+            weight = float(request.form["weight"])
+            length = float(request.form["length"])
+            width = float(request.form["width"])
+            height = float(request.form["height"])
+            special_cargo = request.form["special"]
+            delivery_location = request.form["delivery_location"]
+            declared_value = float(request.form["declared_value"])
+            
+            payment_method = request.form["payment_method"]
+            
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            # Create package first
+            cursor.execute("""
+                INSERT INTO Package (customer_id, weight_lbs, length_in, width_in, height_in, declared_value, special_cargo, delivery_location)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (customer_id, weight, length, width, height, declared_value, special_cargo, delivery_location))
+            
+            package_id = cursor.lastrowid
+            
+            # Create a temporary shipment for payment (will be properly assigned by employee later)
+            # We'll store the payment amount as the price_estimate
+            cursor.execute("""
+                INSERT INTO Shipment (package_id, employee_id, vehicle_id, delivery_location, distance_miles, status, expected_delivery_date, price_estimate)
+                VALUES (?, NULL, NULL, ?, 0, 'Pending', NULL, ?)
+            """, (package_id, delivery_location, declared_value))
+            
+            shipment_id = cursor.lastrowid
+            
+            # Create payment record
+            cursor.execute("""
+                INSERT INTO Payment (shipment_id, payment_date, amount, method)
+                VALUES (?, datetime('now'), ?, ?)
+            """, (shipment_id, declared_value, payment_method))
+            
+            payment_id = cursor.lastrowid
+            
+            conn.commit()
+            
+            message = f"Payment successful! Package #{package_id} created and paid."
+            calculated_value = declared_value
+            
+            cursor.close()
+            conn.close()
+            
         else:
-            customer_id = request.form["customer_id"]
-        weight = request.form["weight"]
-        length = request.form["length"]
-        width = request.form["width"]
-        height = request.form["height"]
-        declared_value = request.form["value"]
-        special_cargo = request.form.get("special", "No")
-        delivery_location = request.form["delivery_location"]
-        
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        #Insert package with delivery_location
-        cursor.execute("""
-            INSERT INTO Package (customer_id, weight_lbs, length_in, width_in, height_in, declared_value, special_cargo, delivery_location)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (customer_id, weight, length, width, height, declared_value, special_cargo, delivery_location))
-        
-        package_id = cursor.lastrowid
-        
-        conn.commit()
-        
-        message = f"Package #{package_id} created successfully! An employee will assign it to a shipment."
-        
-        cursor.close()
-        conn.close()
+            # Calculate value and show payment form
+            if 'user_type' in session and session['user_type'] == 'customer':
+                customer_id = session['user_id']
+            else:
+                customer_id = request.form["customer_id"]
+            
+            weight = float(request.form["weight"])
+            length = float(request.form["length"])
+            width = float(request.form["width"])
+            height = float(request.form["height"])
+            special_cargo = request.form.get("special", "No")
+            delivery_location = request.form["delivery_location"]
+            
+            # Calculate declared value
+            volume = length * width * height
+            base_value = 5.00
+            weight_factor = weight * 3.00
+            volume_factor = volume * 0.05
+            special_cargo_surcharge = 100.00 if special_cargo == "Yes" else 0.00
+            
+            calculated_value = base_value + weight_factor + volume_factor + special_cargo_surcharge
+            calculated_value = round(calculated_value, 2)
+            
+            show_payment_form = True
 
-    return render_template("add_shipment.html", message=message, package_id=package_id)
+    return render_template("add_shipment.html", message=message, package_id=package_id, 
+                         calculated_value=calculated_value, payment_id=payment_id, 
+                         show_payment_form=show_payment_form)
 
 
 # ASSIGN SHIPMENT

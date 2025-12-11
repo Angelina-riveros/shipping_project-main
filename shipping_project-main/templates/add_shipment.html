@@ -24,8 +24,10 @@
     </header>
     <h1 style="text-align: center;">Add a New Package</h1>
 
+    {% if not show_payment_form and not package_id %}
+    <!-- Step 1: Package Information -->
     <form method="POST" style="max-width: 600px; margin: 0 auto;">
-        <h3 style="text-align: center;">Package Information</h3>
+        <h3 style="text-align: center;">📦 Package Information</h3>
 
         {% if not session.user_type or session.user_type != 'customer' %}
         <label>Customer ID:</label>
@@ -44,9 +46,6 @@
         <label>Height (in):</label>
         <input type="number" step="0.01" name="height" required><br>
 
-        <label>Declared Value ($):</label>
-        <input type="number" step="0.01" name="value" required><br>
-
         <label>Special Cargo:</label>
         <select name="special" required>
             <option value="">-- Select --</option>
@@ -55,21 +54,82 @@
         </select><br>
 
         <label>Delivery Location:</label>
-        <input type="text" name="delivery_location" required><br><br>
+        <input type="text" name="delivery_location" required><br>
+        
+        <div style="background-color: #E8F4F8; border: 2px solid #8B5E3C; border-radius: 10px; padding: 15px; margin: 15px 0;">
+            <p style="margin: 0; text-align: center; color: #8B5E3C;">
+                <strong>ℹ️ Note:</strong> The price will be calculated based on your package dimensions, weight, and cargo type. Payment is required before package creation.
+            </p>
+        </div>
 
-        <button type="submit">Create Package</button>
+        <button type="submit">Calculate Price & Continue to Payment</button>
     </form>
+    {% endif %}
+
+    {% if show_payment_form %}
+    <!-- Step 2: Payment Form -->
+    <div style="max-width: 600px; margin: 0 auto; background-color: #FFF0F5; border: 3px solid #8B5E3C; border-radius: 15px; padding: 30px;">
+        <h2 style="color: #8B5E3C; text-align: center;">💰 Payment Required</h2>
+        <div style="text-align: center; margin: 20px 0;">
+            <p style="font-size: 1.3em;"><strong>Total Amount Due:</strong></p>
+            <p style="font-size: 2.5em; color: #D8A39D; font-weight: bold;">${{ "%.2f"|format(calculated_value) }}</p>
+            <p style="font-size: 0.9em; color: #666;">Based on package dimensions, weight, and cargo type</p>
+        </div>
+        
+        <form method="POST">
+            <!-- Hidden fields to preserve package data -->
+            {% if not session.user_type or session.user_type != 'customer' %}
+            <input type="hidden" name="customer_id" value="{{ request.form['customer_id'] }}">
+            {% endif %}
+            <input type="hidden" name="weight" value="{{ request.form['weight'] }}">
+            <input type="hidden" name="length" value="{{ request.form['length'] }}">
+            <input type="hidden" name="width" value="{{ request.form['width'] }}">
+            <input type="hidden" name="height" value="{{ request.form['height'] }}">
+            <input type="hidden" name="special" value="{{ request.form['special'] }}">
+            <input type="hidden" name="delivery_location" value="{{ request.form['delivery_location'] }}">
+            <input type="hidden" name="declared_value" value="{{ calculated_value }}">
+            
+            <h3 style="text-align: center; color: #8B5E3C;">💳 Payment Details</h3>
+            <label>Payment Method:</label>
+            <select name="payment_method" required>
+                <option value="">-- Select Payment Method --</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="Cash">Cash</option>
+                <option value="Check">Check</option>
+            </select><br>
+            
+            <div style="background-color: #FFE4E1; border: 2px solid #D8A39D; border-radius: 10px; padding: 15px; margin: 15px 0;">
+                <p style="margin: 0; text-align: center; color: #8B5E3C; font-size: 0.9em;">
+                    <strong>⚠️ Important:</strong> Payment must be completed to create your package. You cannot proceed without payment.
+                </p>
+            </div>
+            
+            <button type="submit" style="background-color: #8B5E3C; font-size: 1.1em;">Complete Payment & Create Package</button>
+        </form>
+    </div>
+    {% endif %}
 
     {% if message %}
-        <p><strong>{{ message }}</strong></p>
+        <p style="text-align: center; font-size: 1.2em;"><strong>{{ message }}</strong></p>
     {% endif %}
 
     {% if package_id %}
-        <div style="background-color: #FFF0F5; border: 3px solid #8B5E3C; border-radius: 15px; padding: 20px; margin: 20px auto; max-width: 500px; text-align: center;">
-            <h2 style="color: #8B5E3C;">📦 Package Created!</h2>
+        <div style="background-color: #E8F5E9; border: 3px solid #4CAF50; border-radius: 15px; padding: 20px; margin: 20px auto; max-width: 500px; text-align: center;">
+            <h2 style="color: #4CAF50;">✅ Success!</h2>
             <p style="font-size: 1.2em;"><strong>Package ID:</strong></p>
-            <p style="font-size: 2em; color: #D8A39D; font-weight: bold;">{{ package_id }}</p>
-            <p><a href="/assign_shipment" style="color: #8B5E3C; font-weight: bold;">Assign to Shipment →</a></p>
+            <p style="font-size: 2em; color: #2E7D32; font-weight: bold;">{{ package_id }}</p>
+            {% if payment_id %}
+            <p style="font-size: 1.1em;"><strong>Payment ID:</strong> {{ payment_id }}</p>
+            {% endif %}
+            {% if calculated_value %}
+            <hr style="border-color: #4CAF50;">
+            <p style="font-size: 1.2em;"><strong>Amount Paid:</strong></p>
+            <p style="font-size: 1.5em; color: #2E7D32; font-weight: bold;">${{ "%.2f"|format(calculated_value) }}</p>
+            {% endif %}
+            <hr style="border-color: #4CAF50;">
+            <p style="color: #2E7D32;">Your package has been created and paid! An employee will assign it to a shipment soon.</p>
+            <p><a href="/customer_dashboard" style="color: #2E7D32; font-weight: bold;">Return to Dashboard →</a></p>
         </div>
     {% endif %}
 </body>

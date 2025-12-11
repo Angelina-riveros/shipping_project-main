@@ -8,6 +8,11 @@
     <header>
         <h2>📦 Delivery Tracking System</h2>
         <nav>
+            {% if session.user_type == 'customer' %}
+                <a href="/customer_dashboard">Dashboard</a>
+            {% elif session.user_type == 'employee' %}
+                <a href="/employee_dashboard">Dashboard</a>
+            {% endif %}
             <a href="/tracking">Track</a>
             <a href="/make_payment">Make Payment</a>
             <a href="/payments">View Payments</a>

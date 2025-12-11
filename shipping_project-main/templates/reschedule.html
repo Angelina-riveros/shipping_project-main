@@ -8,6 +8,11 @@
     <header>
         <h2>📦 Delivery Tracking System</h2>
         <nav>
+            {% if session.user_type == 'customer' %}
+                <a href="/customer_dashboard">Dashboard</a>
+            {% elif session.user_type == 'employee' %}
+                <a href="/employee_dashboard">Dashboard</a>
+            {% endif %}
             <a href="/tracking">Track</a>
             <a href="/add_shipment">Add Shipment</a>
             <a href="/shipments">Shipments</a>
@@ -16,20 +21,44 @@
             <a href="/vehicles">Vehicles</a>
         </nav>
     </header>
-    <h1 style="text-align: center;">Reschedule Delivery</h1>
+    <h1 style="text-align: center;">Reschedule Delivery 📅</h1>
+
+    {% if my_shipments %}
+    <div style="max-width: 800px; margin: 20px auto;">
+        <h3 style="text-align: center;">Your Shipments</h3>
+        <table border="1" style="margin: 0 auto 30px auto;">
+            <tr>
+                <th>Tracking #</th>
+                <th>Delivery Location</th>
+                <th>Status</th>
+                <th>Current Expected Delivery</th>
+            </tr>
+            {% for ship in my_shipments %}
+            <tr>
+                <td><strong>{{ ship['shipment_id'] }}</strong></td>
+                <td>{{ ship['delivery_location'] }}</td>
+                <td>{{ ship['status'] }}</td>
+                <td>{{ ship['expected_delivery_date'] or 'Not set' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
 
     <form method="POST" style="max-width: 600px; margin: 0 auto;">
+        <h3 style="text-align: center;">Request New Delivery Date</h3>
+        
         <label>Tracking Number:</label>
-        <input type="text" name="tracking" required><br><br>
+        <input type="number" name="tracking" required><br><br>
 
         <label>New Delivery Date:</label>
         <input type="date" name="date" required><br><br>
 
-        <button type="submit">Submit</button>
+        <button type="submit">Reschedule Delivery</button>
     </form>
 
     {% if message %}
-        <p><strong>{{ message }}</strong></p>
+        <p style="text-align: center; margin-top: 20px; padding: 15px; background-color: {% if 'Error' in message %}#FFE4E4{% else %}#D8F4D8{% endif %}; border-radius: 10px; max-width: 600px; margin-left: auto; margin-right: auto;"><strong>{{ message }}</strong></p>
     {% endif %}
 </body>
 </html>

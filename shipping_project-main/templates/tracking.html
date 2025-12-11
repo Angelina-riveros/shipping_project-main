@@ -26,9 +26,21 @@
     <h1 style="text-align: center;">Track a Shipment</h1>
 
     <form method="POST" style="max-width: 600px; margin: 0 auto;">
+        {% if my_shipments %}
+        <label>Select Your Tracking Number:</label>
+        <select name="tracking" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <option value="">-- Select a shipment --</option>
+            {% for ship in my_shipments %}
+            <option value="{{ ship['shipment_id'] }}">
+                Tracking #{{ ship['shipment_id'] }} - {{ ship['delivery_location'] }} ({{ ship['status'] }})
+            </option>
+            {% endfor %}
+        </select>
+        {% else %}
         <label>Enter Tracking Number:</label>
         <input type="text" name="tracking" required>
-        <button type="submit">Search</button>
+        {% endif %}
+        <button type="submit">Track Shipment</button>
     </form>
 
     {% if result %}
