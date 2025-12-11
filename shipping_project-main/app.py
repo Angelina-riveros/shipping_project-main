@@ -148,14 +148,14 @@ def employee_dashboard():
     """)
     inquiries = cursor.fetchall()
     
-    # Get unassigned packages (packages without shipments)
+    # Get unassigned packages (packages with shipments that haven't been assigned to employee/vehicle)
     cursor.execute("""
         SELECT Package.package_id, Customer.name, Package.weight_lbs, 
                Package.delivery_location, Package.declared_value, Package.special_cargo
         FROM Package
         JOIN Customer ON Package.customer_id = Customer.customer_id
         LEFT JOIN Shipment ON Package.package_id = Shipment.package_id
-        WHERE Shipment.shipment_id IS NULL
+        WHERE Shipment.shipment_id IS NULL OR Shipment.employee_id IS NULL
         ORDER BY Package.package_id DESC
     """)
     unassigned_packages = cursor.fetchall()
